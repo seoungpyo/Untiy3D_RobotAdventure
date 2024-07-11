@@ -22,6 +22,12 @@ public class Character : MonoBehaviour
     private NavMeshAgent navMeshAgent;
     private Transform targetPlayer;
 
+    //Health
+    private Health health;
+
+    //Damage Caster
+    private DamageCaster damageCaster;
+
     //State Machine
     [HideInInspector] 
     public enum CharacterState
@@ -39,6 +45,8 @@ public class Character : MonoBehaviour
     {
         characterController = GetComponent<CharacterController>();
         animator = GetComponent<Animator>();
+        health = GetComponent<Health>();
+        damageCaster = GetComponentInChildren<DamageCaster>();
 
         if (!isPlayer)
         {
@@ -188,4 +196,21 @@ public class Character : MonoBehaviour
         SwitchStateTo(CharacterState.Normal);
     }
        
+    public void ApplyDamage(int damage, Vector3 attackPos = new Vector3())
+    {
+        if(health != null)
+        {
+            health.ApplyDamage(damage);
+        }
+    }
+
+    public void EnableDamageCaster()
+    {
+        damageCaster.EnableDamageCaster();
+    }
+
+    public void DisableDamageCaster()
+    {
+        damageCaster.DisableDamageCaster();
+    }
 }
