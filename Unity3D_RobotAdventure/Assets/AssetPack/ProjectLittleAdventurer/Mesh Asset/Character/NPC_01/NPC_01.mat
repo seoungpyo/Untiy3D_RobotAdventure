@@ -161,7 +161,7 @@ Material:
     - _ZWrite: 1
     - _blink: 0
     - _dissolve_height: 30
-    - _enableDissolve: 0
+    - _enableDissolve: 1
     m_Colors:
     - Blink_Color: {r: 1, g: 1, b: 1, a: 1}
     - DissolveEdgeColor: {r: 29.85706, g: 0, b: 0, a: 0}
