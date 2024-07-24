@@ -32,7 +32,7 @@ public class Character : MonoBehaviour
     [HideInInspector] 
     public enum CharacterState
     {
-        Normal, Attacking, Dead, BeingHit
+        Normal, Attacking, Dead, BeingHit, Slide
     }
     public CharacterState currentState;
 
@@ -50,6 +50,10 @@ public class Character : MonoBehaviour
 
     public bool IsInvincible;
     public float InvincibleDuration= 2f;
+
+    private float attackAnimationDuration;
+
+    public float slideSpeed = 9f;
 
     public int coin = 0;
 
@@ -95,10 +99,16 @@ public class Character : MonoBehaviour
 
     private void CalculatePlayerMovement()
     {
-        if(playerInput.MouseButtonDown && characterController.isGrounded)
+        if (playerInput.MouseButtonDown && characterController.isGrounded)
         {
             SwitchStateTo(CharacterState.Attacking);
             return;
+        }
+        else if (playerInput.spaceKeyDown && characterController.isGrounded)
+        {
+            SwitchStateTo(CharacterState.Slide);
+            return;
+
         }
 
         movementVelocity.Set(playerInput.horizontalInput, 0, playerInput.verticalInput);
@@ -142,6 +152,20 @@ public class Character : MonoBehaviour
                         float lerpTime = timePassed / attackSlideDuration;
                         movementVelocity = Vector3.Lerp(transform.forward * attackSlideSpped, Vector3.zero, lerpTime);
                     }
+
+                    if (playerInput.MouseButtonDown && characterController.isGrounded)
+                    {
+                        string currentClipName = animator.GetCurrentAnimatorClipInfo(0)[0].clip.name;
+                        attackAnimationDuration = animator.GetCurrentAnimatorStateInfo(0).normalizedTime;
+
+                        if(currentClipName != "LittleAdventurerAndie_ATTACK_03" && attackAnimationDuration>0.5f && attackAnimationDuration < 0.7f)
+                        {
+                            playerInput.MouseButtonDown = false;
+                            SwitchStateTo(CharacterState.Attacking);
+
+                            CalculatePlayerMovement();
+                        }
+                    }
                 }
                 break;
 
@@ -156,6 +180,10 @@ public class Character : MonoBehaviour
                 }
                 impactOnCharacter = Vector3.Lerp(impactOnCharacter, Vector3.zero, Time.deltaTime * 5);
 
+                break;
+
+            case CharacterState.Slide:
+                movementVelocity = transform.forward * slideSpeed * Time.deltaTime;
                 break;
         }
 
@@ -183,7 +211,7 @@ public class Character : MonoBehaviour
         //Clear Cache
         if (isPlayer)
         {
-            playerInput.MouseButtonDown = false;
+            playerInput.ClearCache();
         }
         
         //Exiting state
@@ -192,11 +220,21 @@ public class Character : MonoBehaviour
             case CharacterState.Normal:
                 break;
             case CharacterState.Attacking:
-                //DisableDamageCaster();
+                
+                if(damageCaster != null)
+                {
+                    damageCaster.DisableDamageCaster();
+                }
+                if (isPlayer)
+                {
+                    GetComponent<PlayerVFXManager>().StopBlade();
+                }
                 break;
             case CharacterState.Dead:
                 break;
             case CharacterState.BeingHit:
+                break;
+            case CharacterState.Slide:
                 break;
         }
 
@@ -236,10 +274,18 @@ public class Character : MonoBehaviour
                     StartCoroutine(DelayCancelInvincible());
                 }
                 break;
+            case CharacterState.Slide:
+                animator.SetTrigger("Slide");
+                break;
         }
 
         currentState = newState;
 
+    }
+
+    public void SlideAnimationEnds()
+    {
+        SwitchStateTo(CharacterState.Normal);
     }
 
     public void AttackAnimationEnds()
